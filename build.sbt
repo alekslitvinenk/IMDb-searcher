@@ -7,6 +7,10 @@ lazy val root = (project in file("."))
     mainClass := Some("com.myapp.Main"),
 
     libraryDependencies ++= Seq(
+      "com.typesafe.slick" %% "slick" % "3.3.0",
+      "com.typesafe.slick" %% "slick-hikaricp" % "3.3.0",
+      "org.slf4j" % "slf4j-nop" % "1.7.10",
+      "mysql" % "mysql-connector-java" % "8.0.14",
       "org.scalatest" %% "scalatest" % "3.0.5" % Test,
       "org.scalamock" %% "scalamock" % "4.1.0" % Test,
     ),
