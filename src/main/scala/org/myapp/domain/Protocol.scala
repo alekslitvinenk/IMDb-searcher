@@ -23,14 +23,14 @@ object Protocol {
     startYear: Int,
     endYear: Int,
     runtimeMinutes: Int,
-    genres: Set[String],
+    genres: String,
     id: Long = 0L,
   )
 
   case class TitleCrew(
     tconst: String,
-    directors: Set[String],
-    writers: Set[String],
+    directors: String,
+    writers: String,
     id: Long = 0L,
   )
 
@@ -56,8 +56,8 @@ object Protocol {
     primaryName: String,
     birthYear: Int,
     deathYear: Int,
-    primaryProfession: Set[String],
-    knownForTitles: Set[String],
+    primaryProfession: String,
+    knownForTitles: String,
     id: Long = 0L,
   )
 
