@@ -1,7 +1,7 @@
-package org.myapp
+package com.github.alekslitvinenk
 
-import org.myapp.db.table.Tables._
-import org.myapp.domain.ProtocolFormat._
+import com.github.alekslitvinenk.db.Tables._
+import com.github.alekslitvinenk.domain.ProtocolFormat._
 import slick.jdbc.MySQLProfile.api._
 
 import scala.concurrent.Await

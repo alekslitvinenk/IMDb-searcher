@@ -1,4 +1,4 @@
-package org.myapp.domain
+package com.github.alekslitvinenk.domain
 
 object Protocol {
 

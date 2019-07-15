@@ -1,6 +1,6 @@
-package org.myapp.domain
+package com.github.alekslitvinenk.domain
 
-import org.myapp.domain.Protocol._
+import com.github.alekslitvinenk.domain.Protocol._
 
 import scala.util.Try
 

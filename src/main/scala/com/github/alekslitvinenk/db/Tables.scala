@@ -1,6 +1,6 @@
-package org.myapp.db.table
+package com.github.alekslitvinenk.db
 
-import org.myapp.domain.Protocol._
+import com.github.alekslitvinenk.domain.Protocol._
 import slick.jdbc.MySQLProfile.api._
 
 object Tables {
