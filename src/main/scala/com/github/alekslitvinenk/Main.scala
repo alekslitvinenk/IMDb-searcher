@@ -22,15 +22,17 @@ object Main extends App {
     path("title") {
       get {
         parameter('search.as[String]) { search =>
-          onSuccess(db.run(searchByTitle(search))) { result =>
+          onSuccess(db.run(searchFilmByTitle(search))) { result =>
             complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, s"$result"))
           }
         }
       }
-    } ~ path("rating") {
+    } ~ path("genre") {
       get {
         parameter('search.as[String]) { search =>
-          complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, s"<h1>$search</h1>"))
+          onSuccess(db.run(searchTop10RatedFilmsByGenre(search))) { result =>
+            complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, s"$result"))
+          }
         }
       }
     }

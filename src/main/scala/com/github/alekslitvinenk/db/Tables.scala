@@ -7,13 +7,13 @@ object Tables {
 
   class TitleAkasTable(tag: Tag) extends Table[TitleAkas](tag, "title_akas") {
 
-    def titleId = column[String]("title_id")
+    def titleId = column[String]("title_id", O.Length(30))
     def ordering = column[Int]("ordering")
-    def title = column[String]("title")
-    def region = column[String]("region")
-    def language = column[String]("language")
-    def types = column[String]("types")
-    def attributes = column[String]("attributes")
+    def title = column[String]("title", O.Length(100))
+    def region = column[String]("region", O.Length(10))
+    def language = column[String]("language", O.Length(10))
+    def types = column[String]("types", O.Length(100))
+    def attributes = column[String]("attributes", O.Length(100))
     def isOriginalTitle = column[Boolean]("is_original_title")
     def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
 
@@ -34,15 +34,15 @@ object Tables {
 
   class TitleBasicsTable(tag: Tag) extends Table[TitleBasics](tag, "title_basics") {
 
-    def tconst = column[String]("tconst")
-    def titleType = column[String]("title_type")
-    def primaryTitle = column[String]("primary_title")
-    def originalTitle = column[String]("original_title")
+    def tconst = column[String]("tconst", O.Length(30))
+    def titleType = column[String]("title_type", O.Length(30))
+    def primaryTitle = column[String]("primary_title", O.Length(100))
+    def originalTitle = column[String]("original_title", O.Length(100))
     def isAdult = column[Boolean]("is_adult")
     def startYear = column[Int]("start_year")
     def endYear = column[Int]("end_year")
     def runtimeMinutes = column[Int]("runtime_minutes")
-    def genres = column[String]("genres")
+    def genres = column[String]("genres", O.Length(100))
     def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
 
     override def * = (
@@ -63,9 +63,9 @@ object Tables {
 
   class TitleCrewTable(tag: Tag) extends Table[TitleCrew](tag, "title_crew") {
 
-    def tconst = column[String]("tconst")
-    def directors = column[String]("directors")
-    def writers = column[String]("writers")
+    def tconst = column[String]("tconst", O.Length(30))
+    def directors = column[String]("directors", O.Length(100))
+    def writers = column[String]("writers", O.Length(100))
     def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
 
     override def * = (
@@ -80,12 +80,12 @@ object Tables {
 
   class TitlePrincipalsTable(tag: Tag) extends Table[TitlePrincipals](tag, "title_principals") {
 
-    def tconst = column[String]("tconst")
+    def tconst = column[String]("tconst", O.Length(30))
     def ordering = column[Int]("ordering")
-    def nconst = column[String]("nconst")
-    def category = column[String]("category")
-    def job = column[String]("job")
-    def characters = column[String]("characters")
+    def nconst = column[String]("nconst", O.Length(30))
+    def category = column[String]("category", O.Length(100))
+    def job = column[String]("job", O.Length(100))
+    def characters = column[String]("characters", O.Length(100))
     def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
 
     override def * = (
@@ -103,7 +103,7 @@ object Tables {
 
   class TitleRatingsTable(tag: Tag) extends Table[TitleRatings](tag, "title_ratings") {
 
-    def tconst = column[String]("tconst")
+    def tconst = column[String]("tconst", O.Length(30))
     def averageRating = column[Double]("average_rating")
     def numVotes = column[Int]("num_votes")
     def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
@@ -120,12 +120,12 @@ object Tables {
 
   class NameBasicsTable(tag: Tag) extends Table[NameBasics](tag, "name_basics") {
 
-    def nconst = column[String]("nconst")
-    def primaryName = column[String]("primary_name")
+    def nconst = column[String]("nconst", O.Length(30))
+    def primaryName = column[String]("primary_name", O.Length(100))
     def birthYear = column[Int]("birth_year")
     def deathYear = column[Int]("death_year")
-    def primaryProfession = column[String]("primary_profession")
-    def knownForTitles = column[String]("known_for_titles")
+    def primaryProfession = column[String]("primary_profession", O.Length(100))
+    def knownForTitles = column[String]("known_for_titles", O.Length(100))
     def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
 
     override def * = (
