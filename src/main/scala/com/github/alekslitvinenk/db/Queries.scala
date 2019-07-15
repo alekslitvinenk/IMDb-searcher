@@ -5,28 +5,28 @@ import slick.jdbc.MySQLProfile.api._
 
 object Queries {
 
-  implicit val getMyMatch = GetResult(r => JointTitleData(r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<))
+  implicit val getMyMatch = GetResult(r => JointTitleData(r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<))
 
   case class JointTitleData(
     title: String,
-    region: String,
-    language: String,
-    primaryTitle: String,
-    originalTitle: String,
+    isAdult: Boolean,
     startYear: Int,
     endYear: Int,
+    runTime: Int,
     genres: String,
-    primaryName: String,
-    primaryProfession: String,
+    castAndCrew: String
   )
 
   def searchByTitle(title: String) =
     sql"""
-         |SELECT title, region, language, primary_title, original_title, start_year, end_year, genres, primary_name, primary_profession
-         |FROM title_akas AS ta
-         |INNER JOIN title_basics AS tb ON ta.title_id = tb.tconst
+         |SELECT original_title AS title, tb.is_adult, tb.start_year, tb.end_year, tb.runtime_minutes, tb.genres,
+         |GROUP_CONCAT(
+         |CONCAT(tp.category, '--', COALESCE(nb.primary_name,'\N'))
+         |SEPARATOR ', ') as cast_and_crew
+         |FROM title_basics AS tb
          |INNER JOIN title_principals AS tp ON tb.tconst = tp.tconst
-         |INNER JOIN name_basics AS nb ON nb.nconst = tp.nconst
-         |WHERE ta.title = $title
+         |LEFT JOIN name_basics AS nb ON nb.nconst = tp.nconst
+         |WHERE tb.primary_title = $title
+         |GROUP BY tb.id
        """.stripMargin.as[JointTitleData]
 }
