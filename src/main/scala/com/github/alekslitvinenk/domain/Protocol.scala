@@ -1,5 +1,7 @@
 package com.github.alekslitvinenk.domain
 
+import slick.jdbc.GetResult
+
 object Protocol {
 
   case class TitleAkas(
@@ -59,6 +61,19 @@ object Protocol {
     primaryProfession: String,
     knownForTitles: String,
     id: Long = 0L,
+  )
+
+  implicit val getMyMatch = GetResult(r => JoitSearhResult(r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<))
+
+  case class JoitSearhResult(
+    title: String,
+    isAdult: Boolean,
+    startYear: Int,
+    endYear: Int,
+    runTime: Int,
+    genres: String,
+    rating: Double,
+    castAndCrew: String
   )
 
 }

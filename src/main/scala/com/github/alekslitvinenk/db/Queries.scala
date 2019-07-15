@@ -1,22 +1,9 @@
 package com.github.alekslitvinenk.db
 
-import slick.jdbc.GetResult
+import com.github.alekslitvinenk.domain.Protocol.JoitSearhResult
 import slick.jdbc.MySQLProfile.api._
 
 object Queries {
-
-  implicit val getMyMatch = GetResult(r => JointTitleData(r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<))
-
-  case class JointTitleData(
-    title: String,
-    isAdult: Boolean,
-    startYear: Int,
-    endYear: Int,
-    runTime: Int,
-    genres: String,
-    rating: Double,
-    castAndCrew: String
-  )
 
   def searchFilmByTitle(title: String) =
     sql"""
@@ -30,7 +17,7 @@ object Queries {
          |LEFT JOIN title_ratings AS tr ON tb.tconst = tr.tconst
          |WHERE tb.primary_title = $title
          |GROUP BY tb.id
-       """.stripMargin.as[JointTitleData]
+       """.stripMargin.as[JoitSearhResult]
 
   def searchTop10RatedFilmsByGenre(genre: String) = {
     sql"""
@@ -46,6 +33,6 @@ object Queries {
          |GROUP BY tb.id
          |ORDER BY rating DESC
          |LIMIT 10
-       """.stripMargin.as[JointTitleData]
+       """.stripMargin.as[JoitSearhResult]
   }
 }
