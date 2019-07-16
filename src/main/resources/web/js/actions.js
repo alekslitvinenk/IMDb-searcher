@@ -29,19 +29,36 @@ function searchByGenreAction() {
   var genre = $("#genreField").val();
 
   $("#console").append("<div>" + genre + "</div>");
+
+  $.ajax({
+    type: 'GET',
+    dataType:'JSON',
+    url: 'genre',
+    data: 'search=' + genre,
+    success: function (response) {
+      buildSearchResults(response.items)
+    },
+    error: function (response) {
+      $("#console").append("<div>" + error + "</div>");
+    }
+  });
 }
 
 function buildSearchResults(arr) {
   var results = $("#results");
   results.empty();
 
-  if(arr.length > 1) {
-    var last = arr.pop();
-    arr = arr.map(function (e) {return e + ";"});
-    arr.push(last);
-  }
+  console.log(arr)
 
-  arr.forEach(function (q) {
-    results.append("<p>" + q + "</p>");
+  arr.forEach(function (film) {
+
+    var str = "<p><b>Title: </b>" + film.title +
+        ". <b>Duration: </b>" + film.runTime + " min. "
+        + "<b>Rating: </b>" + film.rating.toFixed(1) + "<br>"
+        + "<b>Genres:</b> " + film.genres + ". "
+        + "<b>Year: </b> " + film.startYear + "<br>"
+        + "<b>Cast and Crew: </b> " + film.castAndCrew + "</p><hr>"
+
+    results.append(str);
   })
 }

@@ -7,7 +7,7 @@ object Queries {
 
   def searchFilmByTitle(title: String) =
     sql"""
-         |SELECT tb.original_title AS title, tb.is_adult, tb.start_year, tb.end_year, tb.runtime_minutes, tb.genres, AVG(tr.average_rating) AS rating,
+         |SELECT tb.primary_title AS title, tb.is_adult, tb.start_year, tb.end_year, tb.runtime_minutes, tb.genres, AVG(tr.average_rating) AS rating,
          |GROUP_CONCAT(
          |CONCAT(tp.category, '--', COALESCE(nb.primary_name,'\N'))
          |SEPARATOR ', ') as cast_and_crew
@@ -21,7 +21,7 @@ object Queries {
 
   def searchTop10RatedFilmsByGenre(genre: String) = {
     sql"""
-         |SELECT tb.original_title AS title, tb.is_adult, tb.start_year, tb.end_year, tb.runtime_minutes, tb.genres, AVG(tr.average_rating) AS rating,
+         |SELECT tb.primary_title AS title, tb.is_adult, tb.start_year, tb.end_year, tb.runtime_minutes, tb.genres, AVG(tr.average_rating) AS rating,
          |GROUP_CONCAT(
          |CONCAT(tp.category, '--', COALESCE(nb.primary_name,'\N'))
          |SEPARATOR ', ') as cast_and_crew
