@@ -11,15 +11,18 @@ import scala.io.Source
 
 object PopulateDB extends App {
 
+  require(args.length == 6, "Not enough arguments")
+
   val db = Database.forConfig("imdb")
 
-  val f1 = fillTitleAkas("title_akas.txt")
-  val f2 = fillTitleBasics("title_basics.txt")
-  val f3 = fillTitleCrew("title_crew.txt")
-  val f4 = fillTitlePrincipals("title_principals.txt")
-  val f5 = fillTitleRatings("title_ratings.txt")
-  val f6 = fillNameBasics("name_basics.txt")
+  val f1 = fillTitleAkas(args(0))
+  val f2 = fillTitleBasics(args(1))
+  val f3 = fillTitleCrew(args(2))
+  val f4 = fillTitlePrincipals(args(3))
+  val f5 = fillTitleRatings(args(4))
+  val f6 = fillNameBasics(args(5))
 
+  // Get the future that completes when all the other futures complete
   val fAll = for {
     _ <- f1
     _ <- f2
@@ -33,102 +36,35 @@ object PopulateDB extends App {
 
   println("DB has been successfully populated with data!")
 
-  def fillTitleAkas(filePath: String) = {
+  def fillTitleAkas(filePath: String) =
+    createAndPopulateTable(filePath, TitleAkasTable, titleAkasDecoder)
 
-    val table = TitleAkasTable
+  def fillTitleBasics(filePath: String) =
+    createAndPopulateTable(filePath, TitleBasicsTable, titleBasicsDecoder)
 
+  def fillTitleCrew(filePath: String) =
+    createAndPopulateTable(filePath, TitleCrewTable, titleCrewDecoder)
+
+  def fillTitlePrincipals(filePath: String) =
+    createAndPopulateTable(filePath, TitlePrincipalsTable, titlePrincipalsDecoder)
+
+  def fillTitleRatings(filePath: String) =
+    createAndPopulateTable(filePath, TitleRatingsTable, titleRatingsDecoder)
+
+  def fillNameBasics(filePath: String) =
+    createAndPopulateTable(filePath, NameBasicsTable, nameBasicsDecoder)
+
+  private def createAndPopulateTable[O, T <: Table[O]](filePath: String, table: TableQuery[T], converter: String => O) = {
     for {
       _ <- db.run { table.schema.dropIfExists }
       _ <- db.run { table.schema.create }
       _ <- {
-        //val file = new File(filePath)
-        val source = Source.fromResource(filePath)
-        val insertsAction = table ++= source.getLines.map(titleAkasDecoder(_)).toSeq
-
-        db.run(insertsAction)
-      }
-    } yield ()
-  }
-
-  def fillTitleBasics(filePath: String) = {
-
-    val table = TitleBasicsTable
-
-    for {
-      _ <- db.run { table.schema.dropIfExists }
-      _ <- db.run { table.schema.create }
-      _ <- {
-        //val file = new File(filePath)
-        val source = Source.fromResource(filePath)
-        val insertsAction = table ++= source.getLines.map(titleBasicsDecoder(_)).toSeq
-
-        db.run(insertsAction)
-      }
-    } yield ()
-  }
-
-  def fillTitleCrew(filePath: String) = {
-
-    val table = TitleCrewTable
-
-    for {
-      _ <- db.run { table.schema.dropIfExists }
-      _ <- db.run { table.schema.create }
-      _ <- {
-        //val file = new File(filePath)
-        val source = Source.fromResource(filePath)
-        val insertsAction = table ++= source.getLines.map(titleCrewDecoder(_)).toSeq
-
-        db.run(insertsAction)
-      }
-    } yield ()
-  }
-
-  def fillTitlePrincipals(filePath: String) = {
-
-    val table = TitlePrincipalsTable
-
-    for {
-      _ <- db.run { table.schema.dropIfExists }
-      _ <- db.run { table.schema.create }
-      _ <- {
-        //val file = new File(filePath)
-        val source = Source.fromResource(filePath)
-        val insertsAction = table ++= source.getLines.map(titlePrincipalsDecoder(_)).toSeq
-
-        db.run(insertsAction)
-      }
-    } yield ()
-  }
-
-  def fillTitleRatings(filePath: String) = {
-
-    val table = TitleRatingsTable
-
-    for {
-      _ <- db.run { table.schema.dropIfExists }
-      _ <- db.run { table.schema.create }
-      _ <- {
-        //val file = new File(filePath)
-        val source = Source.fromResource(filePath)
-        val insertsAction = table ++= source.getLines.map(titleRatingsDecoder(_)).toSeq
-
-        db.run(insertsAction)
-      }
-    } yield ()
-  }
-
-  def fillNameBasics(filePath: String) = {
-
-    val table = NameBasicsTable
-
-    for {
-      _ <- db.run { table.schema.dropIfExists }
-      _ <- db.run { table.schema.create }
-      _ <- {
-        //val file = new File(filePath)
-        val source = Source.fromResource(filePath)
-        val insertsAction = table ++= source.getLines.map(nameBasicsDecoder(_)).toSeq
+        val source = Source.fromFile(filePath)
+        val insertsAction = table ++= source
+          .getLines
+          // Skip columns titles row
+          .toStream.tail
+          .map(converter(_))
 
         db.run(insertsAction)
       }
