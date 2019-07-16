@@ -11,16 +11,14 @@ import scala.io.Source
 
 object PopulateDB extends App {
 
-  require(args.length == 6, "Not enough arguments")
+  require(args.length == 4, "Not enough arguments")
 
   val db = Database.forConfig("imdb")
 
-  val f1 = fillTitleAkas(args(0))
-  val f2 = fillTitleBasics(args(1))
-  val f3 = fillTitleCrew(args(2))
-  val f4 = fillTitlePrincipals(args(3))
-  val f5 = fillTitleRatings(args(4))
-  val f6 = fillNameBasics(args(5))
+  val f1 = fillTitleBasics(args(0))
+  val f2 = fillTitlePrincipals(args(1))
+  val f3 = fillTitleRatings(args(2))
+  val f4 = fillNameBasics(args(3))
 
   // Get the future that completes when all the other futures complete
   val fAll = for {
@@ -28,22 +26,14 @@ object PopulateDB extends App {
     _ <- f2
     _ <- f3
     _ <- f4
-    _ <- f5
-    _ <- f6
   } yield ()
 
   Await.result(fAll, Duration.Inf)
 
   println("DB has been successfully populated with data!")
 
-  def fillTitleAkas(filePath: String) =
-    createAndPopulateTable(filePath, TitleAkasTable, titleAkasDecoder)
-
   def fillTitleBasics(filePath: String) =
     createAndPopulateTable(filePath, TitleBasicsTable, titleBasicsDecoder)
-
-  def fillTitleCrew(filePath: String) =
-    createAndPopulateTable(filePath, TitleCrewTable, titleCrewDecoder)
 
   def fillTitlePrincipals(filePath: String) =
     createAndPopulateTable(filePath, TitlePrincipalsTable, titlePrincipalsDecoder)

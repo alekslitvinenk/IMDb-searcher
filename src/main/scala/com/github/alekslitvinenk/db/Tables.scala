@@ -5,33 +5,6 @@ import slick.jdbc.MySQLProfile.api._
 
 object Tables {
 
-  class TitleAkasTable(tag: Tag) extends Table[TitleAkas](tag, "title_akas") {
-
-    def titleId = column[String]("title_id", O.Length(30))
-    def ordering = column[Int]("ordering")
-    def title = column[String]("title", O.Length(100))
-    def region = column[String]("region", O.Length(10))
-    def language = column[String]("language", O.Length(10))
-    def types = column[String]("types", O.Length(100))
-    def attributes = column[String]("attributes", O.Length(100))
-    def isOriginalTitle = column[Boolean]("is_original_title")
-    def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
-
-    override def * = (
-      titleId,
-      ordering,
-      title,
-      region,
-      language,
-      types,
-      attributes,
-      isOriginalTitle,
-      id
-    ) <> (TitleAkas.tupled, TitleAkas.unapply)
-  }
-
-  lazy val TitleAkasTable = TableQuery[TitleAkasTable]
-
   class TitleBasicsTable(tag: Tag) extends Table[TitleBasics](tag, "title_basics") {
 
     def tconst = column[String]("tconst", O.Length(30))
@@ -60,23 +33,6 @@ object Tables {
   }
 
   lazy val TitleBasicsTable = TableQuery[TitleBasicsTable]
-
-  class TitleCrewTable(tag: Tag) extends Table[TitleCrew](tag, "title_crew") {
-
-    def tconst = column[String]("tconst", O.Length(30))
-    def directors = column[String]("directors", O.Length(100))
-    def writers = column[String]("writers", O.Length(100))
-    def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
-
-    override def * = (
-      tconst,
-      directors,
-      writers,
-      id
-    ) <> (TitleCrew.tupled, TitleCrew.unapply)
-  }
-
-  lazy val TitleCrewTable = TableQuery[TitleCrewTable]
 
   class TitlePrincipalsTable(tag: Tag) extends Table[TitlePrincipals](tag, "title_principals") {
 

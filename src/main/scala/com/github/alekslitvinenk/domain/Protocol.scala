@@ -4,18 +4,6 @@ import slick.jdbc.GetResult
 
 object Protocol {
 
-  case class TitleAkas(
-    titleId: String,
-    ordering: Int,
-    title: String,
-    region: String,
-    language: String,
-    types: String,
-    attributes: String,
-    isOriginalTitle: Boolean,
-    id: Long = 0L,
-  )
-
   case class TitleBasics(
     tconst: String,
     titleType: String,
@@ -26,13 +14,6 @@ object Protocol {
     endYear: Int,
     runtimeMinutes: Int,
     genres: String,
-    id: Long = 0L,
-  )
-
-  case class TitleCrew(
-    tconst: String,
-    directors: String,
-    writers: String,
     id: Long = 0L,
   )
 
