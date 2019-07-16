@@ -9,13 +9,14 @@ import com.github.alekslitvinenk.domain.Protocol.SearchResult
 import com.github.alekslitvinenk.domain.ProtocolFormat.JsonSupport
 import slick.jdbc.MySQLProfile.api._
 
+import scala.concurrent.ExecutionContext
 import scala.io.StdIn
 
 object Main extends App with JsonSupport {
 
-  implicit val system = ActorSystem("my-system")
-  implicit val materializer = ActorMaterializer()
-  implicit val executionContext = system.dispatcher
+  implicit val system: ActorSystem = ActorSystem("my-system")
+  implicit val materializer: ActorMaterializer = ActorMaterializer()
+  implicit val executionContext: ExecutionContext = system.dispatcher
 
   val db = Database.forConfig("imdb")
 
@@ -36,6 +37,12 @@ object Main extends App with JsonSupport {
           }
         }
       }
+    } ~ path("index.html") {
+      get {
+        getFromResource("web/index.html")
+      }
+    } ~ {
+      getFromResourceDirectory("web")
     }
 
   val bindingFuture = Http().bindAndHandle(route, "localhost", 8080)

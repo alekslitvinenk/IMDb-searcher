@@ -1,0 +1,32 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <title>IMDb-searcher</title>
+  <script type="text/javascript" src="js/jquery-1.10.2.min.js"></script>
+  <script type="text/javascript" src="js/jquery-ui-1.10.3.custom.min.js"></script>
+  <script type="text/javascript" src="js/actions.js"></script>
+</head>
+<body>
+<h1>IMDb-searcher</h1>
+
+<div>console:</div>
+<div id="console" style="border-style:solid; border-width:1px; min-height: 3em; overflow: auto; max-height: 10em"></div>
+
+<div id="safeSessions" style="overflow: auto; min-height: 25em">
+  Find Movie by its primary title:
+  <br/><br/>
+  <label for="primaryTitleField">Primary title: </label><input type="text" id='primaryTitleField'/>
+  <button id="searchByTitleBtn" onclick="searchByTitleAction()">Search</button>
+  <hr/>
+  Get the list of 10 top rated movies for the specified genre
+  <br/><br/>
+  <label for="genreField">Genre: </label><input type="text" id='genreField'/>
+  <button id="searchByGenreBtn" onclick="searchByGenreAction()">Search</button>
+  <br/>
+  <br/>
+  <hr/>
+  <div id="results"></div>
+</div>
+
+</body>
+</html>
