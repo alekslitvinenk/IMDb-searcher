@@ -44,6 +44,7 @@ object PopulateDB extends App {
   def fillNameBasics(filePath: String) =
     createAndPopulateTable(filePath, NameBasicsTable, nameBasicsDecoder)
 
+  // TODO: Insert data into DB by chunks
   private def createAndPopulateTable[O, T <: Table[O]](filePath: String, table: TableQuery[T], converter: String => O) = {
     for {
       _ <- db.run { table.schema.dropIfExists }
