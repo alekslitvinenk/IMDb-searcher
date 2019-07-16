@@ -2,15 +2,16 @@ package com.github.alekslitvinenk
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity}
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
 import com.github.alekslitvinenk.db.Queries._
+import com.github.alekslitvinenk.domain.Protocol.SearchResult
+import com.github.alekslitvinenk.domain.ProtocolFormat.JsonSupport
 import slick.jdbc.MySQLProfile.api._
 
 import scala.io.StdIn
 
-object Main extends App {
+object Main extends App with JsonSupport {
 
   implicit val system = ActorSystem("my-system")
   implicit val materializer = ActorMaterializer()
@@ -23,7 +24,7 @@ object Main extends App {
       get {
         parameter('search.as[String]) { search =>
           onSuccess(db.run(searchFilmByTitle(search))) { result =>
-            complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, s"$result"))
+            complete(SearchResult(result))
           }
         }
       }
@@ -31,7 +32,7 @@ object Main extends App {
       get {
         parameter('search.as[String]) { search =>
           onSuccess(db.run(searchTop10RatedFilmsByGenre(search))) { result =>
-            complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, s"$result"))
+            complete(SearchResult(result))
           }
         }
       }

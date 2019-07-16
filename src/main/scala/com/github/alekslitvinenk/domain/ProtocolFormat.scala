@@ -1,24 +1,16 @@
 package com.github.alekslitvinenk.domain
 
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import com.github.alekslitvinenk.domain.Protocol._
+import spray.json.DefaultJsonProtocol
 
 import scala.util.Try
 
 object ProtocolFormat {
 
-  def titleAkasDecoder(source: String): TitleAkas = {
-    val components = source.split("\t")
-
-    TitleAkas(
-      titleId = components(0),
-      ordering = components(1).toInt,
-      title = components(2),
-      region = components(3),
-      language = components(4),
-      types = components(5),
-      attributes = components(6),
-      isOriginalTitle = toBoolean(components(7)),
-    )
+  trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
+    implicit val searchFormat = jsonFormat8(JoitSearhResult)
+    implicit val itemFormat = jsonFormat1(SearchResult)
   }
 
   def titleBasicsDecoder(source: String): TitleBasics = {
@@ -34,16 +26,6 @@ object ProtocolFormat {
       endYear = toInt(components(6)),
       runtimeMinutes = toInt(components(7)),
       genres = components(8),
-    )
-  }
-
-  def titleCrewDecoder(source: String): TitleCrew = {
-    val components = source.split("\t")
-
-    TitleCrew(
-      tconst = components(0),
-      directors = components(1),
-      writers = components(2),
     )
   }
 

@@ -57,4 +57,8 @@ object Protocol {
     castAndCrew: String
   )
 
+  case class SearchResult(
+    items: Vector[JoitSearhResult]
+  )
+
 }

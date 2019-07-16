@@ -54,7 +54,7 @@ object PopulateDB extends App {
         val insertsAction = table ++= source
           .getLines
           // Skip columns titles row
-          .toStream.tail
+          .toStream.tail.take(3000)
           .map(converter(_))
 
         db.run(insertsAction)
