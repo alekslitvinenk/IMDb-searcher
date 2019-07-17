@@ -9,8 +9,8 @@ object Tables {
 
     def tconst = column[String]("tconst", O.Length(30))
     def titleType = column[String]("title_type", O.Length(30))
-    def primaryTitle = column[String]("primary_title", O.Length(100))
-    def originalTitle = column[String]("original_title", O.Length(100))
+    def primaryTitle = column[String]("primary_title")
+    def originalTitle = column[String]("original_title")
     def isAdult = column[Boolean]("is_adult")
     def startYear = column[Int]("start_year")
     def endYear = column[Int]("end_year")
@@ -39,9 +39,9 @@ object Tables {
     def tconst = column[String]("tconst", O.Length(30))
     def ordering = column[Int]("ordering")
     def nconst = column[String]("nconst", O.Length(30))
-    def category = column[String]("category", O.Length(100))
-    def job = column[String]("job", O.Length(100))
-    def characters = column[String]("characters", O.Length(100))
+    def category = column[String]("category")
+    def job = column[String]("job")
+    def characters = column[String]("characters")
     def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
 
     override def * = (
@@ -77,11 +77,11 @@ object Tables {
   class NameBasicsTable(tag: Tag) extends Table[NameBasics](tag, "name_basics") {
 
     def nconst = column[String]("nconst", O.Length(30))
-    def primaryName = column[String]("primary_name", O.Length(100))
+    def primaryName = column[String]("primary_name", O.Length(150))
     def birthYear = column[Int]("birth_year")
     def deathYear = column[Int]("death_year")
-    def primaryProfession = column[String]("primary_profession", O.Length(100))
-    def knownForTitles = column[String]("known_for_titles", O.Length(100))
+    def primaryProfession = column[String]("primary_profession", O.Length(150))
+    def knownForTitles = column[String]("known_for_titles")
     def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
 
     override def * = (
