@@ -7,8 +7,8 @@ import com.github.alekslitvinenk.domain.ProtocolFormat._
 import slick.jdbc.MySQLProfile.api._
 
 import scala.collection.mutable
-import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.io.Source
 
 object PopulateDB extends App {
@@ -25,9 +25,9 @@ object PopulateDB extends App {
 
   val operations = List(
     fillTitleBasics(args(0)),
-    fillTitlePrincipals(args(1)),
-    fillTitleRatings(args(2)),
-    fillNameBasics(args(3))
+    //fillTitlePrincipals(args(1)),
+    //fillTitleRatings(args(2)),
+    //fillNameBasics(args(3))
   )
 
   // Get the future that completes when all the other futures complete
@@ -43,9 +43,15 @@ object PopulateDB extends App {
   threadPool.shutdown()
 
   def fillTitleBasics(filePath: String): Future[Unit] =
-    createAndPopulateTable(filePath, TitleBasicsTable, titleBasicsDecoder)
+    createAndPopulateTable(
+      filePath,
+      List(
+        TableWriter(TitleBasicsTable, titleBasicsDecoder),
+        //TableWriter(PrimaryTitleIndexTable, primaryTitleIndexDecoder),
+      )
+    )
 
-  def fillTitlePrincipals(filePath: String) =
+  /*def fillTitlePrincipals(filePath: String) =
     createAndPopulateTable(filePath, TitlePrincipalsTable, titlePrincipalsDecoder)
 
   def fillTitleRatings(filePath: String) =
@@ -55,9 +61,9 @@ object PopulateDB extends App {
     createAndPopulateTable(filePath, NameBasicsTable, nameBasicsDecoder)
 
   def fillPrimaryTitleIndex(filePath: String) =
-    createAndPopulateTable(filePath, PrimaryTitleIndexTable, primaryTitleIndexDecoder)
+    createAndPopulateTable(filePath, PrimaryTitleIndexTable, primaryTitleIndexDecoder)*/
 
-  private def createAndPopulateTable[O, T <: Table[O]](filePath: String, table: TableQuery[T], converter: String => O) = {
+  private def createAndPopulateTable(filePath: String, tableWriters: List[TableWriter]) = {
 
     val chunkSize = 5000
     val batchSize = 100
@@ -70,25 +76,38 @@ object PopulateDB extends App {
         .grouped(batchSize)
 
       while (source.hasNext) {
-        val insertAction = table ++= source
-          .next()
-          .map(converter(_))
 
-        sideFutures.enqueue(db.run(insertAction).map(_ => ()))
+        val lines = source.next()
+
+        val fList = tableWriters.map { tw =>
+          val convertedResults = lines.map(tw.converter(_))
+          val tableAction = tw.table ++= convertedResults
+          db.run(tableAction).map(_ => ())
+        }
+
+        sideFutures ++= fList
       }
 
       Future.reduceLeft(sideFutures.toList)((_, _) => ())
     }
 
     for {
-      //_ <- db.run { table.schema.dropIfExists }
-      //_ <- db.run { table.schema.create }
+      _ <- {
+        val createAndDropTablesFutures = tableWriters.map { tw =>
+          for {
+            _ <- db.run(tw.table.schema.dropIfExists)
+            _ <- db.run(tw.table.schema.create)
+          } yield ()
+        }
+
+        Future.reduceLeft(createAndDropTablesFutures)((_, _) => ())
+      }
       _ <- {
 
         val source = Source.fromFile(filePath)
           .getLines
           // Skip column titles row
-          .drop(100001)
+          .drop(1)
           .take(200000)
           .grouped(chunkSize)
 
@@ -103,7 +122,7 @@ object PopulateDB extends App {
   }
 }
 
-case class TableWriter[O, T <: Table[O]](
+case class TableWriter[+T](
   table: TableQuery[T],
-  converter: String => O
+  converter: String => T
 )
