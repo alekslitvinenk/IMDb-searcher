@@ -13,6 +13,15 @@ object ProtocolFormat {
     implicit val itemFormat = jsonFormat1(SearchResult)
   }
 
+  def primaryTitleIndexDecoder(source: String): PrimaryTitleIndex = {
+    val components = source.split("\t")
+
+    PrimaryTitleIndex(
+      tconst = components(0),
+      primaryTitle = components(2),
+    )
+  }
+
   def titleBasicsDecoder(source: String): TitleBasics = {
     val components = source.split("\t")
 

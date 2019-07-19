@@ -4,6 +4,12 @@ import slick.jdbc.GetResult
 
 object Protocol {
 
+  case class PrimaryTitleIndex (
+    primaryTitle: String,
+    tconst: String,
+    id: Long = 0L,
+  )
+
   case class TitleBasics(
     tconst: String,
     titleType: String,

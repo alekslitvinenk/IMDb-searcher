@@ -54,21 +54,42 @@ object PopulateDB extends App {
   def fillNameBasics(filePath: String) =
     createAndPopulateTable(filePath, NameBasicsTable, nameBasicsDecoder)
 
-  // TODO: Insert data into DB by chunks
+  def fillPrimaryTitleIndex(filePath: String) =
+    createAndPopulateTable(filePath, PrimaryTitleIndexTable, primaryTitleIndexDecoder)
+
   private def createAndPopulateTable[O, T <: Table[O]](filePath: String, table: TableQuery[T], converter: String => O) = {
 
     val chunkSize = 5000
     val batchSize = 100
 
+    def insertInBatches(chunk: List[String], batchSize: Int) = {
+
+      val sideFutures = mutable.Queue[Future[Unit]]()
+
+      val source = chunk
+        .grouped(batchSize)
+
+      while (source.hasNext) {
+        val insertAction = table ++= source
+          .next()
+          .map(converter(_))
+
+        sideFutures.enqueue(db.run(insertAction).map(_ => ()))
+      }
+
+      Future.reduceLeft(sideFutures.toList)((_, _) => ())
+    }
+
     for {
-      _ <- db.run { table.schema.dropIfExists }
-      _ <- db.run { table.schema.create }
+      //_ <- db.run { table.schema.dropIfExists }
+      //_ <- db.run { table.schema.create }
       _ <- {
 
         val source = Source.fromFile(filePath)
           .getLines
           // Skip column titles row
-          .drop(1)
+          .drop(100001)
+          .take(200000)
           .grouped(chunkSize)
 
         // We do care about HikariCP queue size, so let's wait till previous batch of futures completes
@@ -80,22 +101,9 @@ object PopulateDB extends App {
       }
     } yield ()
   }
-
-  def insertInBatches(chunk: List[String], batchSize: Int) = {
-
-    val sideFutures = mutable.Queue[Future[Unit]]()
-
-    val source = chunk
-      .grouped(batchSize)
-
-    while (source.hasNext) {
-      val insertAction = table ++= source
-        .next()
-        .map(converter(_))
-
-      sideFutures.enqueue(db.run(insertAction).map(_ => ()))
-    }
-
-    Future.reduceLeft(sideFutures.toList)((_, _) => ())
-  }
 }
+
+case class TableWriter[O, T <: Table[O]](
+  table: TableQuery[T],
+  converter: String => O
+)

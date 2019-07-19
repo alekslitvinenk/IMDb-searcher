@@ -5,9 +5,24 @@ import slick.jdbc.MySQLProfile.api._
 
 object Tables {
 
+  class PrimaryTitleIndexTable(tag: Tag) extends Table[PrimaryTitleIndex](tag, "primary_title_index") {
+
+    def primaryTitle = column[String]("primary_title")
+    def tconst = column[String]("tconst", O.Length(30), O.Unique)
+    def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
+
+    override def * = (
+      primaryTitle,
+      tconst,
+      id
+    ) <> (PrimaryTitleIndex.tupled, PrimaryTitleIndex.unapply)
+  }
+
+  lazy val PrimaryTitleIndexTable = TableQuery[PrimaryTitleIndexTable]
+
   class TitleBasicsTable(tag: Tag) extends Table[TitleBasics](tag, "title_basics") {
 
-    def tconst = column[String]("tconst", O.Length(30))
+    def tconst = column[String]("tconst", O.Length(30), O.Unique)
     def titleType = column[String]("title_type", O.Length(30))
     def primaryTitle = column[String]("primary_title")
     def originalTitle = column[String]("original_title")
