@@ -16,7 +16,8 @@ object PopulateDB extends App {
   require(args.length == 4, "Not enough arguments")
 
   // We do care about memory footprint when importing our DB
-  implicit val ecFixed = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(20))
+  val threadPool = Executors.newFixedThreadPool(10)
+  implicit val ecFixed = ExecutionContext.fromExecutor(threadPool)
 
   val db = Database.forConfig("imdb")
 
@@ -39,7 +40,7 @@ object PopulateDB extends App {
   println(s"DB has been successfully populated with data in $timeSpent ms")
 
   db.close()
-  System.exit(0)
+  threadPool.shutdown()
 
   def fillTitleBasics(filePath: String): Future[Unit] =
     createAndPopulateTable(filePath, TitleBasicsTable, titleBasicsDecoder)
@@ -59,24 +60,6 @@ object PopulateDB extends App {
     val chunkSize = 5000
     val batchSize = 100
 
-    def doInBatches(chunk: List[String]) = {
-
-      val sideFutures = mutable.Queue[Future[Unit]]()
-
-      val source = chunk
-        .grouped(batchSize)
-
-      while (source.hasNext) {
-        val insertAction = table ++= source
-          .next()
-          .map(converter(_))
-
-        sideFutures.enqueue(db.run(insertAction).map(_ => ()))
-      }
-
-      Future.reduceLeft(sideFutures.toList)((_, _) => ())
-    }
-
     for {
       _ <- db.run { table.schema.dropIfExists }
       _ <- db.run { table.schema.create }
@@ -88,13 +71,31 @@ object PopulateDB extends App {
           .drop(1)
           .grouped(chunkSize)
 
-        // We do care about HikariCP queue size, so let's wait till previous butch of futures completes
+        // We do care about HikariCP queue size, so let's wait till previous batch of futures completes
         while (source.hasNext) {
-          Await.result(doInBatches(source.next()), Duration.Inf)
+          Await.result(insertInBatches(source.next(), batchSize), Duration.Inf)
         }
 
         Future.successful(())
       }
     } yield ()
+  }
+
+  def insertInBatches(chunk: List[String], batchSize: Int) = {
+
+    val sideFutures = mutable.Queue[Future[Unit]]()
+
+    val source = chunk
+      .grouped(batchSize)
+
+    while (source.hasNext) {
+      val insertAction = table ++= source
+        .next()
+        .map(converter(_))
+
+      sideFutures.enqueue(db.run(insertAction).map(_ => ()))
+    }
+
+    Future.reduceLeft(sideFutures.toList)((_, _) => ())
   }
 }
