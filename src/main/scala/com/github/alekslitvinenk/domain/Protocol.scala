@@ -5,13 +5,12 @@ import slick.jdbc.GetResult
 object Protocol {
 
   case class PrimaryTitleIndex (
-    primaryTitle: String,
-    tconst: String,
-    id: Long = 0L,
+    tconst: Long,
+    thash: Long,
   )
 
   case class TitleBasics(
-    tconst: String,
+    tconst: Long,
     titleType: String,
     primaryTitle: String,
     originalTitle: String,
@@ -20,34 +19,30 @@ object Protocol {
     endYear: Int,
     runtimeMinutes: Int,
     genres: String,
-    id: Long = 0L,
   )
 
   case class TitlePrincipals(
-    tconst: String,
+    tconst: Long,
     ordering: Int,
-    nconst: String,
+    nconst: Long,
     category: String,
     job: String,
     characters: String,
-    id: Long = 0L,
   )
 
   case class TitleRatings(
-    tconst: String,
+    tconst: Long,
     averageRating: Double,
     numVotes: Int,
-    id: Long = 0L,
   )
 
   case class NameBasics(
-    nconst: String,
+    nconst: Long,
     primaryName: String,
     birthYear: Int,
     deathYear: Int,
     primaryProfession: String,
     knownForTitles: String,
-    id: Long = 0L,
   )
 
   implicit val getMyMatch = GetResult(r => JoitSearhResult(r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<))

@@ -13,20 +13,20 @@ object ProtocolFormat {
     implicit val itemFormat = jsonFormat1(SearchResult)
   }
 
-  implicit def primaryTitleIndexDecoder(source: String): PrimaryTitleIndex = {
+  def primaryTitleIndexDecoder(source: String): PrimaryTitleIndex = {
     val components = source.split("\t")
 
     PrimaryTitleIndex(
-      tconst = components(0),
-      primaryTitle = components(2),
+      tconst = constToLong(components(0)),
+      thash = components(2).hashCode
     )
   }
 
-  implicit def titleBasicsDecoder(source: String): TitleBasics = {
+  def titleBasicsDecoder(source: String): TitleBasics = {
     val components = source.split("\t")
 
     TitleBasics(
-      tconst = components(0),
+      tconst = constToLong(components(0)),
       titleType = components(1),
       primaryTitle = components(2),
       originalTitle = components(3),
@@ -42,9 +42,9 @@ object ProtocolFormat {
     val components = source.split("\t")
 
     TitlePrincipals(
-      tconst = components(0),
+      tconst = constToLong(components(0)),
       ordering = toInt(components(1)),
-      nconst = components(2),
+      nconst = constToLong(components(2)),
       category = components(3),
       job = components(4),
       characters = components(5),
@@ -55,7 +55,7 @@ object ProtocolFormat {
     val components = source.split("\t")
 
     TitleRatings(
-      tconst = components(0),
+      tconst = constToLong(components(0)),
       averageRating = toDouble(components(1)),
       numVotes = toInt(components(2)),
     )
@@ -65,7 +65,7 @@ object ProtocolFormat {
     val components = source.split("\t")
 
     NameBasics(
-      nconst = components(0),
+      nconst = constToLong(components(0)),
       primaryName = components(1),
       birthYear = toInt(components(2)),
       deathYear = toInt(components(3)),
@@ -73,6 +73,8 @@ object ProtocolFormat {
       knownForTitles = components(5),
     )
   }
+
+  private def constToLong(source: String) = Try(source.drop(2).toLong).getOrElse(0L)
 
   private def toBoolean(source: String) = Try(source.toInt == 1).getOrElse(false)
 

@@ -24,8 +24,8 @@ object PopulateDB extends App {
   val startTime = System.currentTimeMillis()
 
   val operations = List(
-    fillTitleBasics(args(0)),
-    //fillTitlePrincipals(args(1)),
+    //fillTitleBasicsAndTPrimaryTitleIndex(args(0)),
+    fillTitlePrincipals(args(1)),
     //fillTitleRatings(args(2)),
     //fillNameBasics(args(3))
   )
@@ -42,16 +42,56 @@ object PopulateDB extends App {
   db.close()
   threadPool.shutdown()
 
-  def fillTitleBasics(filePath: String): Future[Unit] =
-    createAndPopulateTable(
-      filePath,
-      List(
-        TableWriter(TitleBasicsTable, titleBasicsDecoder),
-        //TableWriter(PrimaryTitleIndexTable, primaryTitleIndexDecoder),
-      )
-    )
+  def fillTitleBasicsAndTPrimaryTitleIndex(filePath: String): Future[Unit] = {
 
-  /*def fillTitlePrincipals(filePath: String) =
+    val chunkSize = 10000
+    val batchSize = 100
+
+    def insertInBatches(chunk: List[String], batchSize: Int) = {
+
+      val sideFutures = mutable.Queue[Future[Unit]]()
+
+      val source = chunk
+        .grouped(batchSize)
+
+      while (source.hasNext) {
+        val lines = source.next()
+
+        val titleBasicsInsert = TitleBasicsTable ++= lines.map(titleBasicsDecoder(_))
+        val titleIndexInser = PrimaryTitleIndexTable ++=  lines.map(primaryTitleIndexDecoder(_))
+
+        sideFutures.enqueue(db.run(titleBasicsInsert).map(_ => ()))
+        sideFutures.enqueue(db.run(titleIndexInser).map(_ => ()))
+      }
+
+      Future.reduceLeft(sideFutures.toList)((_, _) => ())
+    }
+
+    for {
+      //_ <- db.run { TitleBasicsTable.schema.dropIfExists }
+      //_ <- db.run { TitleBasicsTable.schema.create }
+      //_ <- db.run { PrimaryTitleIndexTable.schema.dropIfExists }
+      //_ <- db.run { PrimaryTitleIndexTable.schema.create }
+      _ <- {
+
+        val source = Source.fromFile(filePath)
+          .getLines
+          // Skip column titles row
+          .drop(600001)
+          .take(400000)
+          .grouped(chunkSize)
+
+        // We do care about HikariCP queue size, so let's wait till previous batch of futures completes
+        while (source.hasNext) {
+          Await.result(insertInBatches(source.next(), batchSize), Duration.Inf)
+        }
+
+        Future.successful(())
+      }
+    } yield ()
+  }
+
+  def fillTitlePrincipals(filePath: String) =
     createAndPopulateTable(filePath, TitlePrincipalsTable, titlePrincipalsDecoder)
 
   def fillTitleRatings(filePath: String) =
@@ -60,10 +100,7 @@ object PopulateDB extends App {
   def fillNameBasics(filePath: String) =
     createAndPopulateTable(filePath, NameBasicsTable, nameBasicsDecoder)
 
-  def fillPrimaryTitleIndex(filePath: String) =
-    createAndPopulateTable(filePath, PrimaryTitleIndexTable, primaryTitleIndexDecoder)*/
-
-  private def createAndPopulateTable(filePath: String, tableWriters: List[TableWriter]) = {
+  private def createAndPopulateTable[O, T <: Table[O]](filePath: String, table: TableQuery[T], converter: String => O) = {
 
     val chunkSize = 5000
     val batchSize = 100
@@ -76,16 +113,11 @@ object PopulateDB extends App {
         .grouped(batchSize)
 
       while (source.hasNext) {
+        val insertAction = table ++= source
+          .next()
+          .map(converter(_))
 
-        val lines = source.next()
-
-        val fList = tableWriters.map { tw =>
-          val convertedResults = lines.map(tw.converter(_))
-          val tableAction = tw.table ++= convertedResults
-          db.run(tableAction).map(_ => ())
-        }
-
-        sideFutures ++= fList
+        sideFutures.enqueue(db.run(insertAction).map(_ => ()))
       }
 
       Future.reduceLeft(sideFutures.toList)((_, _) => ())
@@ -108,7 +140,7 @@ object PopulateDB extends App {
           .getLines
           // Skip column titles row
           .drop(1)
-          .take(200000)
+          .take(1000000)
           .grouped(chunkSize)
 
         // We do care about HikariCP queue size, so let's wait till previous batch of futures completes
@@ -121,8 +153,3 @@ object PopulateDB extends App {
     } yield ()
   }
 }
-
-case class TableWriter[+T](
-  table: TableQuery[T],
-  converter: String => T
-)
