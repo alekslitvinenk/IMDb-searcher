@@ -7,13 +7,15 @@ object Tables {
 
   class PrimaryTitleIndexTable(tag: Tag) extends Table[PrimaryTitleIndex](tag, "primary_title_index") {
 
-    def primaryTitle = column[String]("primary_title")
     def tconst = column[Long]("tconst", O.PrimaryKey)
+    def thash = column[Long]("thash")
 
     override def * = (
-      primaryTitle,
       tconst,
+      thash
     ) <> (PrimaryTitleIndex.tupled, PrimaryTitleIndex.unapply)
+
+    def idx = index("idx_thash", thash)
   }
 
   lazy val PrimaryTitleIndexTable = TableQuery[PrimaryTitleIndexTable]
@@ -53,7 +55,6 @@ object Tables {
     def category = column[String]("category")
     def job = column[String]("job")
     def characters = column[String]("characters")
-    def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
 
     override def * = (
       tconst,
@@ -62,8 +63,9 @@ object Tables {
       category,
       job,
       characters,
-      id,
     ) <> (TitlePrincipals.tupled, TitlePrincipals.unapply)
+
+    def idx = index("idx_signum", (tconst, nconst))
   }
 
   lazy val TitlePrincipalsTable = TableQuery[TitlePrincipalsTable]
@@ -79,6 +81,8 @@ object Tables {
       averageRating,
       numVotes,
     ) <> (TitleRatings.tupled, TitleRatings.unapply)
+
+    def idx = index("idx_rating", averageRating)
   }
 
   lazy val TitleRatingsTable = TableQuery[TitleRatingsTable]

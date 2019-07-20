@@ -5,8 +5,8 @@ import slick.jdbc.GetResult
 object Protocol {
 
   case class PrimaryTitleIndex (
-    primaryTitle: String,
     tconst: Long,
+    thash: Long,
   )
 
   case class TitleBasics(
@@ -28,7 +28,6 @@ object Protocol {
     category: String,
     job: String,
     characters: String,
-    id: Long = 0L,
   )
 
   case class TitleRatings(

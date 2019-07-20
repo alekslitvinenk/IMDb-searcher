@@ -24,10 +24,10 @@ object PopulateDB extends App {
   val startTime = System.currentTimeMillis()
 
   val operations = List(
-    fillTitleBasicsAndTPrimaryTitleIndex(args(0)),
+    //fillTitleBasicsAndTPrimaryTitleIndex(args(0)),
     fillTitlePrincipals(args(1)),
-    fillTitleRatings(args(2)),
-    fillNameBasics(args(3))
+    //fillTitleRatings(args(2)),
+    //fillNameBasics(args(3))
   )
 
   // Get the future that completes when all the other futures complete
@@ -68,17 +68,17 @@ object PopulateDB extends App {
     }
 
     for {
-      _ <- db.run { TitleBasicsTable.schema.dropIfExists }
-      _ <- db.run { TitleBasicsTable.schema.create }
-      _ <- db.run { PrimaryTitleIndexTable.schema.dropIfExists }
-      _ <- db.run { PrimaryTitleIndexTable.schema.create }
+      //_ <- db.run { TitleBasicsTable.schema.dropIfExists }
+      //_ <- db.run { TitleBasicsTable.schema.create }
+      //_ <- db.run { PrimaryTitleIndexTable.schema.dropIfExists }
+      //_ <- db.run { PrimaryTitleIndexTable.schema.create }
       _ <- {
 
         val source = Source.fromFile(filePath)
           .getLines
           // Skip column titles row
-          .drop(1)
-          .take(100000)
+          .drop(600001)
+          .take(400000)
           .grouped(chunkSize)
 
         // We do care about HikariCP queue size, so let's wait till previous batch of futures completes
@@ -132,7 +132,7 @@ object PopulateDB extends App {
           .getLines
           // Skip column titles row
           .drop(1)
-          .take(100000)
+          .take(1000000)
           .grouped(chunkSize)
 
         // We do care about HikariCP queue size, so let's wait till previous batch of futures completes

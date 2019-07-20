@@ -18,7 +18,7 @@ object ProtocolFormat {
 
     PrimaryTitleIndex(
       tconst = constToLong(components(0)),
-      primaryTitle = components(2),
+      thash = components(2).hashCode
     )
   }
 
