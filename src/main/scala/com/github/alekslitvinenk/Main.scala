@@ -5,7 +5,7 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
-import com.github.alekslitvinenk.db.Queries._
+import com.github.alekslitvinenk.db.Queries
 import com.github.alekslitvinenk.domain.Protocol.SearchResult
 import com.github.alekslitvinenk.domain.ProtocolFormat.JsonSupport
 import slick.jdbc.MySQLProfile.api._
@@ -20,12 +20,13 @@ object Main extends App with JsonSupport {
   implicit val executionContext: ExecutionContext = system.dispatcher
 
   val db = Database.forConfig("imdb")
+  val queries = Queries(db)
 
   val route =
     path("title") {
       get {
         parameter('search.as[String]) { search =>
-          onSuccess(db.run(searchFilmByTitle(search))) { result =>
+          onSuccess(queries.searchFilmByTitle(search)) { result =>
             complete(SearchResult(result))
           }
         }
@@ -33,7 +34,7 @@ object Main extends App with JsonSupport {
     } ~ path("genre") {
       get {
         parameter('search.as[String]) { search =>
-          onSuccess(db.run(searchTop10RatedFilmsByGenre(search))) { result =>
+          onSuccess(queries.searchTop10RatedFilmsByGenre(search)) { result =>
             complete(SearchResult(result))
           }
         }

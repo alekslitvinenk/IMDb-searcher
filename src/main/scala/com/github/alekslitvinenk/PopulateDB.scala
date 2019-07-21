@@ -23,6 +23,9 @@ object PopulateDB extends App {
 
   val startTime = System.currentTimeMillis()
 
+  val dropNum = 0
+  val takeNum = 1000000
+
   val operations = List(
     fillTitleBasicsAndTPrimaryTitleIndex(args(0)),
     fillTitlePrincipals(args(1)),
@@ -79,8 +82,8 @@ object PopulateDB extends App {
         val source = Source.fromFile(filePath)
           .getLines
           // Skip column titles row
-          .drop(1)
-          .take(1000000)
+          .drop(1 + dropNum)
+          .take(takeNum)
           .grouped(chunkSize)
 
         // We do care about HikariCP queue size, so let's wait till previous batch of futures completes
@@ -133,8 +136,8 @@ object PopulateDB extends App {
         val source = Source.fromFile(filePath)
           .getLines
           // Skip column titles row
-          .drop(1)
-          .take(1000000)
+          .drop(1 + dropNum)
+          .take(takeNum)
           .grouped(chunkSize)
 
         // We do care about HikariCP queue size, so let's wait till previous batch of futures completes
