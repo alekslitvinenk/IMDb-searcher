@@ -2,6 +2,7 @@ package com.github.alekslitvinenk
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
 import com.github.alekslitvinenk.db.Queries._
@@ -37,10 +38,12 @@ object Main extends App with JsonSupport {
           }
         }
       }
-    } ~ path("index.html") {
+    } ~ path("/index.html") {
       get {
-        getFromResource("web/index.html")
+        getFromResource("/web/index.html")
       }
+    } ~ pathSingleSlash {
+      redirect("index.html", StatusCodes.PermanentRedirect)
     } ~ {
       getFromResourceDirectory("web")
     }

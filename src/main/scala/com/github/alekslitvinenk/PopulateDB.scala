@@ -78,7 +78,7 @@ object PopulateDB extends App {
           .getLines
           // Skip column titles row
           .drop(600001)
-          .take(400000)
+          //.take(400000)
           .grouped(chunkSize)
 
         // We do care about HikariCP queue size, so let's wait till previous batch of futures completes
@@ -124,23 +124,15 @@ object PopulateDB extends App {
     }
 
     for {
-      _ <- {
-        val createAndDropTablesFutures = tableWriters.map { tw =>
-          for {
-            _ <- db.run(tw.table.schema.dropIfExists)
-            _ <- db.run(tw.table.schema.create)
-          } yield ()
-        }
-
-        Future.reduceLeft(createAndDropTablesFutures)((_, _) => ())
-      }
+      _ <- db.run { table.schema.dropIfExists }
+      _ <- db.run { table.schema.create }
       _ <- {
 
         val source = Source.fromFile(filePath)
           .getLines
           // Skip column titles row
           .drop(1)
-          .take(1000000)
+          //.take(1000000)
           .grouped(chunkSize)
 
         // We do care about HikariCP queue size, so let's wait till previous batch of futures completes

@@ -19,4 +19,13 @@ lazy val root = (project in file("."))
     ),
 
     scalacOptions ++= Seq("-Ypartial-unification"),
+
+    unmanagedResourceDirectories in Compile += { baseDirectory.value / "src/main/resources" }
   )
+
+addCommandAlias(
+  "build",
+  """|;
+     |clean;
+     |compile;
+  """.stripMargin)
