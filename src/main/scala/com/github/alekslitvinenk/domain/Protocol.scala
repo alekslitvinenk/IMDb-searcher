@@ -45,6 +45,11 @@ object Protocol {
     knownForTitles: String,
   )
 
+  case class PrimaryNameIndex(
+    nconst: Long,
+    nhash: Long,
+  )
+
   implicit val getMyMatch = GetResult(r => JoitSearhResult(r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<))
 
   case class JoitSearhResult(

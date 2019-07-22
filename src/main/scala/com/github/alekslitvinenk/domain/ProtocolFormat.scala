@@ -38,7 +38,7 @@ object ProtocolFormat {
     )
   }
 
-  implicit def titlePrincipalsDecoder(source: String): TitlePrincipals = {
+  def titlePrincipalsDecoder(source: String): TitlePrincipals = {
     val components = source.split("\t")
 
     TitlePrincipals(
@@ -51,7 +51,7 @@ object ProtocolFormat {
     )
   }
 
-  implicit def titleRatingsDecoder(source: String): TitleRatings = {
+  def titleRatingsDecoder(source: String): TitleRatings = {
     val components = source.split("\t")
 
     TitleRatings(
@@ -61,7 +61,7 @@ object ProtocolFormat {
     )
   }
 
-  implicit def nameBasicsDecoder(source: String): NameBasics = {
+  def nameBasicsDecoder(source: String): NameBasics = {
     val components = source.split("\t")
 
     NameBasics(
@@ -71,6 +71,15 @@ object ProtocolFormat {
       deathYear = toInt(components(3)),
       primaryProfession = components(4),
       knownForTitles = components(5),
+    )
+  }
+
+  def primaryNameIndexDecoder(source: String): PrimaryNameIndex = {
+    val components = source.split("\t")
+
+    PrimaryNameIndex(
+      nconst = constToLong(components(0)),
+      nhash = components(1).hashCode
     )
   }
 

@@ -108,4 +108,18 @@ object Tables {
 
   lazy val NameBasicsTable = TableQuery[NameBasicsTable]
 
+  class PrimaryNameIndexTable(tag: Tag) extends Table[PrimaryNameIndex](tag, "primary_name_index") {
+    def nconst = column[Long]("nconst", O.PrimaryKey)
+    def nhash = column[Long]("nhash")
+
+    override def * = (
+      nconst,
+      nhash
+    ) <> (PrimaryNameIndex.tupled, PrimaryNameIndex.unapply)
+
+    def idx = index("idx_nhash", nhash)
+  }
+
+  lazy val PrimaryNameIndexTable = TableQuery[PrimaryNameIndexTable]
+
 }

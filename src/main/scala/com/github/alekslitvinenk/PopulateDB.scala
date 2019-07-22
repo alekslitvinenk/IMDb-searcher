@@ -31,15 +31,15 @@ object PopulateDB extends App {
 
   case class SliceData(dropNum: Int, takeNum: Int)
 
-  //val dropNum = 0
-  //val takeNum = 1000000
+  val chunkSize = 5000
+  val batchSize = 100
   val sliceOpt: Option[SliceData] = None//Some(SliceData(0, 30000))
 
   val operations = List(
-    fillTitleBasicsAndTPrimaryTitleIndex(args(0)),
+    fillTitleBasicsAndPrimaryTitleIndex(args(0)),
     fillTitlePrincipals(args(1)),
     fillTitleRatings(args(2)),
-    fillNameBasics(args(3))
+    fillNameBasicsAndPrimaryNameIndex(args(3))
   )
 
   // Get the future that completes when all the other futures complete
@@ -54,11 +54,7 @@ object PopulateDB extends App {
   db.close()
   threadPool.shutdown()
 
-  //TODO: Partition DB tables
-  def fillTitleBasicsAndTPrimaryTitleIndex(filePath: String): Future[Unit] = {
-
-    val chunkSize = 10000
-    val batchSize = 100
+  def fillTitleBasicsAndPrimaryTitleIndex(filePath: String): Future[Unit] = {
 
     def insertInBatches(chunk: List[String], batchSize: Int) = {
 
@@ -106,13 +102,49 @@ object PopulateDB extends App {
   def fillTitleRatings(filePath: String) =
     createAndPopulateTable(filePath, TitleRatingsTable, titleRatingsDecoder)
 
-  def fillNameBasics(filePath: String) =
-    createAndPopulateTable(filePath, NameBasicsTable, nameBasicsDecoder)
+  def fillNameBasicsAndPrimaryNameIndex(filePath: String): Future[Unit] = {
+
+    def insertInBatches(chunk: List[String], batchSize: Int) = {
+
+      val sideFutures = mutable.Queue[Future[Unit]]()
+
+      val source = chunk
+        .grouped(batchSize)
+
+      while (source.hasNext) {
+        val lines = source.next()
+
+        val titleBasicsInsert = NameBasicsTable ++= lines.map(nameBasicsDecoder(_))
+        val titleIndexInser = PrimaryNameIndexTable ++=  lines.map(primaryNameIndexDecoder(_))
+
+        sideFutures.enqueue(db.run(titleBasicsInsert).map(_ => ()))
+        sideFutures.enqueue(db.run(titleIndexInser).map(_ => ()))
+      }
+
+      Future.reduceLeft(sideFutures.toList)((_, _) => ())
+    }
+
+    for {
+      _ <- db.run { NameBasicsTable.schema.dropIfExists }
+      _ <- db.run { NameBasicsTable.schema.create }
+      _ <- db.run { PrimaryNameIndexTable.schema.dropIfExists }
+      _ <- db.run { PrimaryNameIndexTable.schema.create }
+      _ <- {
+
+        val source = preprocessSource(Source.fromFile(filePath))
+          .grouped(chunkSize)
+
+        // We do care about HikariCP queue size, so let's wait till previous batch of futures completes
+        while (source.hasNext) {
+          Await.result(insertInBatches(source.next(), batchSize), Duration.Inf)
+        }
+
+        Future.successful(())
+      }
+    } yield ()
+  }
 
   private def createAndPopulateTable[O, T <: Table[O]](filePath: String, table: TableQuery[T], converter: String => O) = {
-
-    val chunkSize = 5000
-    val batchSize = 100
 
     def insertInBatches(chunk: List[String], batchSize: Int) = {
 
