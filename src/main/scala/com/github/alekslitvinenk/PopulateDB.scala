@@ -23,8 +23,11 @@ object PopulateDB extends App {
 
   val startTime = System.currentTimeMillis()
 
-  val dropNum = 0
-  val takeNum = 1000000
+  case class SliceData(dropNum: Int, takeNum: Int)
+
+  //val dropNum = 0
+  //val takeNum = 1000000
+  val sliceOpt: Option[SliceData] = _
 
   val operations = List(
     fillTitleBasicsAndTPrimaryTitleIndex(args(0)),
@@ -46,7 +49,6 @@ object PopulateDB extends App {
   threadPool.shutdown()
 
   //TODO: Partition DB tables
-
   def fillTitleBasicsAndTPrimaryTitleIndex(filePath: String): Future[Unit] = {
 
     val chunkSize = 10000
@@ -79,11 +81,7 @@ object PopulateDB extends App {
       _ <- db.run { PrimaryTitleIndexTable.schema.create }
       _ <- {
 
-        val source = Source.fromFile(filePath)
-          .getLines
-          // Skip column titles row
-          .drop(1 + dropNum)
-          .take(takeNum)
+        val source = preprocessSource(Source.fromFile(filePath))
           .grouped(chunkSize)
 
         // We do care about HikariCP queue size, so let's wait till previous batch of futures completes
@@ -133,11 +131,7 @@ object PopulateDB extends App {
       _ <- db.run { table.schema.create }
       _ <- {
 
-        val source = Source.fromFile(filePath)
-          .getLines
-          // Skip column titles row
-          .drop(1 + dropNum)
-          .take(takeNum)
+        val source = preprocessSource(Source.fromFile(filePath))
           .grouped(chunkSize)
 
         // We do care about HikariCP queue size, so let's wait till previous batch of futures completes
@@ -148,5 +142,19 @@ object PopulateDB extends App {
         Future.successful(())
       }
     } yield ()
+  }
+
+  private def preprocessSource(source: Source) = {
+    sliceOpt.fold {
+      source
+        .getLines
+        // Skip column titles row
+        .drop(1)
+    } { sliceData =>
+      source
+        .getLines
+        // Skip column titles row + given offset
+        .slice(sliceData.dropNum + 1, sliceData.takeNum)
+    }
   }
 }
