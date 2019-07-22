@@ -10,14 +10,22 @@ Searches information in IMDb datasets
   
 2. Create database named `imdb`
 
-3. Run DB importer in docker:<br>
+3. Download the data from https://datasets.imdbws.com/
+
+4. Run DB importer in docker:<br>
     ```bash
-    docker run -it -p 8080:8080 alekslitvinenk/imdb-db-importer
+    docker run --network="host" \
+    -v "/Users/alitvinenko/Downloads":"/opt/data" \
+    alekslitvinenk/imdb-db-importer \
+    "/opt/data/title_basics.txt" \
+    "/opt/data/title_principals.txt" \
+    "/opt/data/title_ratings.txt" \
+    "/opt/data/name_basics.txt"
      ```
      
-4. Create partitions on tables
+5. Create partitions on tables
 
-5. Run web application in docker:<br>
+6. Run web application in docker:<br>
    ```bash
-    docker run -it -p 8080:8080 alekslitvinenk/imdb-app
+    docker run -p 8080:8080 alekslitvinenk/imdb-app 0.0.0.0
     ```

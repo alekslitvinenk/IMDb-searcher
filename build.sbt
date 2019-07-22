@@ -22,10 +22,3 @@ lazy val root = (project in file("."))
 
     unmanagedResourceDirectories in Compile += { baseDirectory.value / "src/main/resources" }
   )
-
-addCommandAlias(
-  "build",
-  """|;
-     |clean;
-     |compile;
-  """.stripMargin)

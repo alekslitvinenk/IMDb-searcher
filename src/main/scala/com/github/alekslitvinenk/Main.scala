@@ -11,7 +11,7 @@ import com.github.alekslitvinenk.domain.ProtocolFormat.JsonSupport
 import slick.jdbc.MySQLProfile.api._
 
 import scala.concurrent.ExecutionContext
-import scala.io.StdIn
+import scala.util.Try
 
 object Main extends App with JsonSupport {
 
@@ -19,6 +19,8 @@ object Main extends App with JsonSupport {
   implicit val materializer: ActorMaterializer = ActorMaterializer()
   implicit val executionContext: ExecutionContext = system.dispatcher
 
+
+  val interface = Try(args(0)).getOrElse("localhost")
   val db = Database.forConfig("imdb")
   val queries = Queries(db)
 
@@ -39,9 +41,9 @@ object Main extends App with JsonSupport {
           }
         }
       }
-    } ~ path("/index.html") {
+    } ~ path("index.html") {
       get {
-        getFromResource("/web/index.html")
+        getFromResource("web/index.html")
       }
     } ~ pathSingleSlash {
       redirect("index.html", StatusCodes.PermanentRedirect)
@@ -49,11 +51,7 @@ object Main extends App with JsonSupport {
       getFromResourceDirectory("web")
     }
 
-  val bindingFuture = Http().bindAndHandle(route, "localhost", 8080)
+  val bindingFuture = Http().bindAndHandle(route, interface,8080)
 
-  println(s"Server online at http://localhost:8080/\nPress RETURN to stop...")
-  StdIn.readLine() // let it run until user presses return
-  bindingFuture
-    .flatMap(_.unbind()) // trigger unbinding from the port
-    .onComplete(_ => system.terminate()) // and shutdown when done
+  println(s"Server online at http://$interface:8080/\nPress RETURN to stop...")
 }

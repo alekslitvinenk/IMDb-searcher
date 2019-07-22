@@ -13,6 +13,12 @@ import scala.io.Source
 
 object PopulateDB extends App {
 
+  println("Arguments:")
+
+  for {
+    arg <- args
+  } println(arg)
+
   require(args.length == 4, "Not enough arguments")
 
   // We do care about memory footprint when importing our DB
@@ -27,7 +33,7 @@ object PopulateDB extends App {
 
   //val dropNum = 0
   //val takeNum = 1000000
-  val sliceOpt: Option[SliceData] = _
+  val sliceOpt: Option[SliceData] = None//Some(SliceData(0, 30000))
 
   val operations = List(
     fillTitleBasicsAndTPrimaryTitleIndex(args(0)),
@@ -154,7 +160,7 @@ object PopulateDB extends App {
       source
         .getLines
         // Skip column titles row + given offset
-        .slice(sliceData.dropNum + 1, sliceData.takeNum)
+        .slice(sliceData.dropNum + 1, sliceData.takeNum + 1)
     }
   }
 }

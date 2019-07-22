@@ -1,21 +1,5 @@
-FROM docker:18.09.6
-
-LABEL maintainer="Alexander Litvinenko <array.shift@yahoo.com>"
-
-ENV APP_NAME imdbs
-ENV APP_INSTALL_PATH /opt/${APP_NAME}
-
-RUN set -e && \
-    mkdir -p ${APP_INSTALL_PATH} && \
-    apk add --no-cache netcat-openbsd bash mysql-client && \
-    docker run --name imdb-mysql \
-    -e MYSQL_ROOT_PASSWORD="jobjob" \
-    -p 3306:3306 \
-    -d mysql && \
-    sleep 20 && \
-
-
-
-EXPOSE 3306/tcp
-
+FROM openjdk:11.0-jre
+COPY . /usr/src/myapp
+WORKDIR /usr/src/myapp
+ENTRYPOINT exec java -cp IMDb-searcher-assembly-0.1.jar "com.github.alekslitvinenk.PopulateDB"
 CMD [ "$@" ]

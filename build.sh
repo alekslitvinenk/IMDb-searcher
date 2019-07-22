@@ -2,10 +2,10 @@
 
 rm -R target
 
-sbt ';clean ;assembly'
+sbt ';clean ;compile; ;assembly'
 
-docker build -t alekslitvinenk/imdb-app:latest -f Dockerfile.javaApp ./target/scala-2.12
+docker build -t alekslitvinenk/imdb-app:latest -f Dockerfile.webApp ./target/scala-2.12
 docker push alekslitvinenk/imdb-app:latest
 
-#docker build -t alekslitvinenk/imdb:$NEW_UUID .
-#docker push alekslitvinenk/imdb:$NEW_UUID
+docker build -t alekslitvinenk/imdb-db-importer:latest -f Dockerfile.dbImporterApp ./target/scala-2.12
+docker push alekslitvinenk/imdb-db-importer:latest
