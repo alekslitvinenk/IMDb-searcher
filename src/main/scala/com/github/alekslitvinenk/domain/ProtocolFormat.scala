@@ -70,7 +70,12 @@ object ProtocolFormat {
       birthYear = toInt(components(2)),
       deathYear = toInt(components(3)),
       primaryProfession = components(4),
-      knownForTitles = components(5),
+      knownForTitles = Try {
+        components(5)
+          .split(",")
+          .map(constToLong(_))
+          .mkString(",")
+      }.getOrElse("")
     )
   }
 
