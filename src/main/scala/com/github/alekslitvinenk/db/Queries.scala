@@ -5,7 +5,7 @@ import slick.jdbc.MySQLProfile.api._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class Queries(database: Database)(implicit executionContext: ExecutionContext) {
+class Queries(dataBase: Database)(implicit executionContext: ExecutionContext) {
 
   def searchFilmByTitle(title: String) = {
 
@@ -25,7 +25,7 @@ class Queries(database: Database)(implicit executionContext: ExecutionContext) {
          |GROUP BY tb.tconst
        """.stripMargin.as[JoitSearhResult]
 
-      database.run(query)
+      dataBase.run(query)
     }
 
   def searchTop10RatedFilmsByGenre(genre: String) = {
@@ -39,6 +39,57 @@ class Queries(database: Database)(implicit executionContext: ExecutionContext) {
     }
 
     loop(genre, 0, 10000)
+  }
+
+  def searchKevinBaconDegrees(person: String) = {
+    val KevinBacon = 102L
+
+    def loop(persons: Vector[Int], circleNum: Int): Future[Int] = {
+      println("persons: " + persons.length + " : " + persons.take(10).mkString(",") + "..." + persons.takeRight(10).mkString(","))
+      if(persons.nonEmpty && circleNum < 6) {
+        getClosestCircleByIds(persons).flatMap { rez =>
+          println("circleNum: " + circleNum)
+
+          if (rez.contains(KevinBacon)) Future.successful(circleNum)
+          else loop(rez, circleNum + 1)
+        }
+      } else Future.successful(0)
+    }
+
+    getPersonIdByName(person).flatMap { id =>
+      loop(id, 1)
+    }
+  }
+
+  private def getClosestCircleByIds(persons: Vector[Int]) = {
+    val personsStr = persons.mkString(" ")
+
+    val query =
+      sql"""
+        |SELECT DISTINCT nconst FROM title_principals
+        |WHERE tconst IN
+        |(SELECT DISTINCT tconst
+        |FROM
+        |title_principals
+        |WHERE nconst IN ($personsStr))
+      """.stripMargin.as[Int]
+
+    dataBase.run(query)
+  }
+
+  private def getPersonIdByName(personName: String) = {
+    val nameHash = personName.hashCode
+
+    val query =
+      sql"""
+        |SELECT nconst
+        |FROM
+        |primary_name_index
+        |WHERE nhash=$nameHash
+        |LIMIT 1
+      """.stripMargin.as[Int]
+
+    dataBase.run(query)
   }
 
   private def searchTop10RatedFilmsByGenreInternal(genre: String, pageNum: Int, pageSize: Int) = {
@@ -63,7 +114,7 @@ class Queries(database: Database)(implicit executionContext: ExecutionContext) {
          |LIMIT 10
        """.stripMargin.as[JoitSearhResult]
 
-    database.run(query)
+    dataBase.run(query)
   }
 }
 

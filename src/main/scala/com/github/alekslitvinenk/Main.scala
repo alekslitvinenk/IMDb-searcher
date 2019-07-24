@@ -2,7 +2,7 @@ package com.github.alekslitvinenk
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
 import com.github.alekslitvinenk.db.Queries
@@ -38,6 +38,14 @@ object Main extends App with JsonSupport {
         parameter('search.as[String]) { search =>
           onSuccess(queries.searchTop10RatedFilmsByGenre(search)) { result =>
             complete(SearchResult(result))
+          }
+        }
+      }
+    } ~ path("separation") {
+      get {
+        parameter('search.as[String]) { search =>
+          onSuccess(queries.searchKevinBaconDegrees(search)) { result =>
+            complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, s"<h1>$result</h1>"))
           }
         }
       }

@@ -7,6 +7,9 @@ $(document).ajaxStop(function () {
 });
 
 function searchByTitleAction() {
+  var results = $("#results");
+  results.empty();
+
   var title = $("#primaryTitleField").val();
 
   $("#console").append("<div>" + title + "</div>");
@@ -19,13 +22,16 @@ function searchByTitleAction() {
     success: function (response) {
       buildSearchResults(response.items)
     },
-    error: function (response) {
+    error: function (error) {
       $("#console").append("<div>" + error + "</div>");
     }
   });
 }
 
 function searchByGenreAction() {
+  var results = $("#results");
+  results.empty();
+
   var genre = $("#genreField").val();
 
   $("#console").append("<div>" + genre + "</div>");
@@ -38,7 +44,29 @@ function searchByGenreAction() {
     success: function (response) {
       buildSearchResults(response.items)
     },
-    error: function (response) {
+    error: function (error) {
+      $("#console").append("<div>" + error + "</div>");
+    }
+  });
+}
+
+function searchByPerson() {
+  var results = $("#results");
+  results.empty();
+
+  var personName = $("#personNameField").val();
+
+  $("#console").append("<div>" + personName + "</div>");
+
+  $.ajax({
+    type: 'GET',
+    dataType:'html',
+    url: 'separation',
+    data: 'search=' + personName,
+    success: function (response) {
+      results.append("<h1>" + response + "</h1>");
+    },
+    error: function (error) {
       $("#console").append("<div>" + error + "</div>");
     }
   });
