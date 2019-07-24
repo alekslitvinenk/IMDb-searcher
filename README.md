@@ -3,9 +3,15 @@
 Searches information in IMDb datasets
 
 ## Quick Guide
+
+In this guide we assume that theuser have at least 8G memory on his/her machine.
+
 1. Run MySQL image in docker:<br>
     ```bash
-    docker run --name imdb-mysql -e MYSQL_ROOT_PASSWORD=jobjob -d -p 3306:3306 mysql
+    docker run \
+    --name imdb-mysql \
+    --memory="5g" --memory-swap="25g" \
+    -e MYSQL_ROOT_PASSWORD=<somepassword> -d -p 3306:3306 mysql
     ```
   
 2. Create database named `imdb`
@@ -23,6 +29,11 @@ Searches information in IMDb datasets
     gunzip title.principals.tsv.gz && \
     wget https://datasets.imdbws.com/title.ratings.tsv.gz && \
     gunzip title.ratings.tsv.gz
+    ```
+    
+4. Build the project:<br>
+    ```bash
+    ./build.sh
     ```
 
 4. Run DB importer in docker:<br>
