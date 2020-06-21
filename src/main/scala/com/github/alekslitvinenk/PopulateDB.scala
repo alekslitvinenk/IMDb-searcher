@@ -8,7 +8,7 @@ import slick.jdbc.MySQLProfile.api._
 
 import scala.collection.mutable
 import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.io.Source
 
 object PopulateDB extends App {
@@ -23,7 +23,7 @@ object PopulateDB extends App {
 
   // We do care about memory footprint when importing our DB
   val threadPool = Executors.newFixedThreadPool(10)
-  implicit val ecFixed: ExecutionContextExecutor = ExecutionContext.fromExecutor(threadPool)
+  implicit val ecFixed = ExecutionContext.fromExecutor(threadPool)
 
   val db = Database.forConfig("imdb")
 
@@ -55,6 +55,9 @@ object PopulateDB extends App {
   threadPool.shutdown()
 
   def fillTitleBasicsAndPrimaryTitleIndex(filePath: String): Future[Unit] = {
+    
+    val tableName1 = "title_basics"
+    val tableName2 = "title_index"
 
     def insertInBatches(chunk: List[String], batchSize: Int): Future[Unit] = {
 
@@ -69,8 +72,20 @@ object PopulateDB extends App {
         val titleBasicsInsert = TitleBasicsTable ++= lines.map(titleBasicsDecoder)
         val titleIndexInsert = PrimaryTitleIndexTable ++=  lines.map(primaryTitleIndexDecoder)
 
-        batchInsertFutures.enqueue(db.run(titleBasicsInsert).map(_ => ()))
-        batchInsertFutures.enqueue(db.run(titleIndexInsert).map(_ => ()))
+        batchInsertFutures.enqueue(
+          db.run(titleBasicsInsert)
+            .recover { case e: Throwable =>
+              println(s"Exception happened during batch insert for table $tableName1: ${e.getMessage}")
+            }
+            .map(_ => ())
+        )
+        
+        batchInsertFutures.enqueue(
+          db.run(titleIndexInsert)
+            .recover { case e: Throwable =>
+              println(s"Exception happened during batch insert for table $tableName2: ${e.getMessage}")
+            }
+            .map(_ => ()))
       }
 
       Future.reduceLeft(batchInsertFutures.toList)((_, _) => ())
@@ -92,6 +107,9 @@ object PopulateDB extends App {
     createAndPopulateTable(filePath, TitleRatingsTable, titleRatingsDecoder)
 
   def fillNameBasicsAndPrimaryNameIndex(filePath: String): Future[Unit] = {
+    
+    val tableName1 = "name_basics"
+    val tableName2 = "name_index"
 
     def insertInBatches(chunk: List[String], batchSize: Int): Future[Unit] = {
 
@@ -106,8 +124,21 @@ object PopulateDB extends App {
         val titleBasicsInsert = NameBasicsTable ++= lines.map(nameBasicsDecoder)
         val titleIndexInsert = PrimaryNameIndexTable ++=  lines.map(primaryNameIndexDecoder)
 
-        batchInsertFutures.enqueue(db.run(titleBasicsInsert).map(_ => ()))
-        batchInsertFutures.enqueue(db.run(titleIndexInsert).map(_ => ()))
+        batchInsertFutures.enqueue(
+          db.run(titleBasicsInsert)
+            .recover { case e: Throwable =>
+              println(s"Exception happened during batch insert for table $tableName1: ${e.getMessage}")
+            }
+            .map(_ => ())
+        )
+        
+        batchInsertFutures.enqueue(
+          db.run(titleIndexInsert)
+            .recover { case e: Throwable =>
+              println(s"Exception happened during batch insert for table $tableName2: ${e.getMessage}")
+            }
+            .map(_ => ())
+        )
       }
 
       Future.reduceLeft(batchInsertFutures.toList)((_, _) => ())
@@ -136,7 +167,13 @@ object PopulateDB extends App {
           .next()
           .map(converter)
 
-        batchInsertFutures.enqueue(db.run(insertAction).map(_ => ()))
+        batchInsertFutures.enqueue(
+          db.run(insertAction)
+            .recover { case e: Throwable =>
+              println(s"Exception happened during batch insert for some table: ${e.getMessage}")
+            }
+            .map(_ => ())
+        )
       }
 
       Future.reduceLeft(batchInsertFutures.toList)((_, _) => ())
