@@ -4,7 +4,7 @@ Searches information in IMDb datasets
 
 ## Quick Guide
 
-In this guide we assume that theuser have at least 8G memory on his/her machine.
+In this guide we assume that the user has at least 8G memory on his/her machine.
 
 1. Run MySQL image in docker:<br>
     ```bash
