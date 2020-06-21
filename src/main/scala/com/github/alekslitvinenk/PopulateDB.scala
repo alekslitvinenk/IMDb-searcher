@@ -67,10 +67,10 @@ object PopulateDB extends App {
         val lines = source.next()
 
         val titleBasicsInsert = TitleBasicsTable ++= lines.map(titleBasicsDecoder(_))
-        val titleIndexInser = PrimaryTitleIndexTable ++=  lines.map(primaryTitleIndexDecoder(_))
+        val titleIndexInsert = PrimaryTitleIndexTable ++=  lines.map(primaryTitleIndexDecoder(_))
 
         sideFutures.enqueue(db.run(titleBasicsInsert).map(_ => ()))
-        sideFutures.enqueue(db.run(titleIndexInser).map(_ => ()))
+        sideFutures.enqueue(db.run(titleIndexInsert).map(_ => ()))
       }
 
       Future.reduceLeft(sideFutures.toList)((_, _) => ())
