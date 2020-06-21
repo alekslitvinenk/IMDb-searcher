@@ -8,7 +8,7 @@ import slick.jdbc.MySQLProfile.api._
 
 import scala.collection.mutable
 import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor, Future}
 import scala.io.Source
 
 object PopulateDB extends App {
@@ -23,7 +23,7 @@ object PopulateDB extends App {
 
   // We do care about memory footprint when importing our DB
   val threadPool = Executors.newFixedThreadPool(10)
-  implicit val ecFixed = ExecutionContext.fromExecutor(threadPool)
+  implicit val ecFixed: ExecutionContextExecutor = ExecutionContext.fromExecutor(threadPool)
 
   val db = Database.forConfig("imdb")
 
@@ -56,9 +56,9 @@ object PopulateDB extends App {
 
   def fillTitleBasicsAndPrimaryTitleIndex(filePath: String): Future[Unit] = {
 
-    def insertInBatches(chunk: List[String], batchSize: Int) = {
+    def insertInBatches(chunk: List[String], batchSize: Int): Future[Unit] = {
 
-      val sideFutures = mutable.Queue[Future[Unit]]()
+      val batchInsertFutures = mutable.Queue[Future[Unit]]()
 
       val source = chunk
         .grouped(batchSize)
@@ -66,14 +66,14 @@ object PopulateDB extends App {
       while (source.hasNext) {
         val lines = source.next()
 
-        val titleBasicsInsert = TitleBasicsTable ++= lines.map(titleBasicsDecoder(_))
-        val titleIndexInsert = PrimaryTitleIndexTable ++=  lines.map(primaryTitleIndexDecoder(_))
+        val titleBasicsInsert = TitleBasicsTable ++= lines.map(titleBasicsDecoder)
+        val titleIndexInsert = PrimaryTitleIndexTable ++=  lines.map(primaryTitleIndexDecoder)
 
-        sideFutures.enqueue(db.run(titleBasicsInsert).map(_ => ()))
-        sideFutures.enqueue(db.run(titleIndexInsert).map(_ => ()))
+        batchInsertFutures.enqueue(db.run(titleBasicsInsert).map(_ => ()))
+        batchInsertFutures.enqueue(db.run(titleIndexInsert).map(_ => ()))
       }
 
-      Future.reduceLeft(sideFutures.toList)((_, _) => ())
+      Future.reduceLeft(batchInsertFutures.toList)((_, _) => ())
     }
 
     for {
@@ -81,18 +81,7 @@ object PopulateDB extends App {
       _ <- db.run { TitleBasicsTable.schema.create }
       _ <- db.run { PrimaryTitleIndexTable.schema.dropIfExists }
       _ <- db.run { PrimaryTitleIndexTable.schema.create }
-      _ <- {
-
-        val source = preprocessSource(Source.fromFile(filePath))
-          .grouped(chunkSize)
-
-        // We do care about HikariCP queue size, so let's wait till previous batch of futures completes
-        while (source.hasNext) {
-          Await.result(insertInBatches(source.next(), batchSize), Duration.Inf)
-        }
-
-        Future.successful(())
-      }
+      _ <- fillData(filePath, chunkSize, batchSize, insertInBatches)
     } yield ()
   }
 
@@ -104,9 +93,9 @@ object PopulateDB extends App {
 
   def fillNameBasicsAndPrimaryNameIndex(filePath: String): Future[Unit] = {
 
-    def insertInBatches(chunk: List[String], batchSize: Int) = {
+    def insertInBatches(chunk: List[String], batchSize: Int): Future[Unit] = {
 
-      val sideFutures = mutable.Queue[Future[Unit]]()
+      val batchInsertFutures = mutable.Queue[Future[Unit]]()
 
       val source = chunk
         .grouped(batchSize)
@@ -114,14 +103,14 @@ object PopulateDB extends App {
       while (source.hasNext) {
         val lines = source.next()
 
-        val titleBasicsInsert = NameBasicsTable ++= lines.map(nameBasicsDecoder(_))
-        val titleIndexInser = PrimaryNameIndexTable ++=  lines.map(primaryNameIndexDecoder(_))
+        val titleBasicsInsert = NameBasicsTable ++= lines.map(nameBasicsDecoder)
+        val titleIndexInsert = PrimaryNameIndexTable ++=  lines.map(primaryNameIndexDecoder)
 
-        sideFutures.enqueue(db.run(titleBasicsInsert).map(_ => ()))
-        sideFutures.enqueue(db.run(titleIndexInser).map(_ => ()))
+        batchInsertFutures.enqueue(db.run(titleBasicsInsert).map(_ => ()))
+        batchInsertFutures.enqueue(db.run(titleIndexInsert).map(_ => ()))
       }
 
-      Future.reduceLeft(sideFutures.toList)((_, _) => ())
+      Future.reduceLeft(batchInsertFutures.toList)((_, _) => ())
     }
 
     for {
@@ -129,26 +118,15 @@ object PopulateDB extends App {
       _ <- db.run { NameBasicsTable.schema.create }
       _ <- db.run { PrimaryNameIndexTable.schema.dropIfExists }
       _ <- db.run { PrimaryNameIndexTable.schema.create }
-      _ <- {
-
-        val source = preprocessSource(Source.fromFile(filePath))
-          .grouped(chunkSize)
-
-        // We do care about HikariCP queue size, so let's wait till previous batch of futures completes
-        while (source.hasNext) {
-          Await.result(insertInBatches(source.next(), batchSize), Duration.Inf)
-        }
-
-        Future.successful(())
-      }
+      _ <- fillData(filePath, chunkSize, batchSize, insertInBatches)
     } yield ()
   }
 
-  private def createAndPopulateTable[O, T <: Table[O]](filePath: String, table: TableQuery[T], converter: String => O) = {
+  private def createAndPopulateTable[O, T <: Table[O]](filePath: String, table: TableQuery[T], converter: String => O): Future[Unit] = {
 
-    def insertInBatches(chunk: List[String], batchSize: Int) = {
+    def insertInBatches(chunk: List[String], batchSize: Int): Future[Unit] = {
 
-      val sideFutures = mutable.Queue[Future[Unit]]()
+      val batchInsertFutures = mutable.Queue[Future[Unit]]()
 
       val source = chunk
         .grouped(batchSize)
@@ -156,33 +134,34 @@ object PopulateDB extends App {
       while (source.hasNext) {
         val insertAction = table ++= source
           .next()
-          .map(converter(_))
+          .map(converter)
 
-        sideFutures.enqueue(db.run(insertAction).map(_ => ()))
+        batchInsertFutures.enqueue(db.run(insertAction).map(_ => ()))
       }
 
-      Future.reduceLeft(sideFutures.toList)((_, _) => ())
+      Future.reduceLeft(batchInsertFutures.toList)((_, _) => ())
     }
 
     for {
       _ <- db.run { table.schema.dropIfExists }
       _ <- db.run { table.schema.create }
-      _ <- {
-
-        val source = preprocessSource(Source.fromFile(filePath))
-          .grouped(chunkSize)
-
-        // We do care about HikariCP queue size, so let's wait till previous batch of futures completes
-        while (source.hasNext) {
-          Await.result(insertInBatches(source.next(), batchSize), Duration.Inf)
-        }
-
-        Future.successful(())
-      }
+      _ <- fillData(filePath, chunkSize, batchSize, insertInBatches)
     } yield ()
   }
+  
+  private def fillData(filePath: String, chunkSize: Int, batchSize: Int, func: (List[String], Int) => Future[Unit]): Future[Unit] = {
+    val source = preprocessSource(Source.fromFile(filePath))
+      .grouped(chunkSize)
+  
+    // We do care about HikariCP queue size, so let's wait till previous batch of futures completes
+    while (source.hasNext) {
+      Await.result(func(source.next(), batchSize), Duration.Inf)
+    }
+  
+    Future.successful(())
+  }
 
-  private def preprocessSource(source: Source) = {
+  private def preprocessSource(source: Source): Iterator[String] = {
     sliceOpt.fold {
       source
         .getLines
