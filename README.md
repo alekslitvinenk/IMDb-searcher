@@ -1,6 +1,6 @@
 # 🍿 IMDb-searcher
 
-Searches information in IMDb datasets
+Simple tool to search information in IMDb datasets. This solution comes with bundled web-app with UI
 
 ## Quick Guide
 
